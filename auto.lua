@@ -557,13 +557,13 @@ end
 
 -- Server Hop Function
 local function serverHop()
-    local maxRetries = 5
     local retryDelay = 3
     local attempt = 1
     local timerConnection
 
     local function attemptHop()
-        createNotification("Fetching servers (Attempt " .. attempt .. "/" .. maxRetries .. ")...", Color3.fromRGB(255, 165, 0))
+        local originalJobId = game.JobId
+        createNotification("Fetching servers (Attempt " .. attempt .. ")...", Color3.fromRGB(255, 165, 0))
         local servers = {}
         local success, response = pcall(function()
             return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
@@ -576,10 +576,8 @@ local function serverHop()
             end
         else
             createNotification("Failed to fetch servers. Retrying in " .. retryDelay .. "s...", Color3.fromRGB(255, 100, 100))
-            if attempt < maxRetries then
-                if timerConnection then timerConnection:Disconnect() end
-                timerConnection = startTimer(retryDelay, attemptHop)
-            end
+            if timerConnection then timerConnection:Disconnect() end
+            timerConnection = startTimer(retryDelay, attemptHop)
             attempt = attempt + 1
             return
         end
@@ -607,28 +605,28 @@ local function serverHop()
             end)
             if not success then
                 createNotification("Teleport failed: " .. tostring(result) .. ". Retrying in " .. retryDelay .. "s...", Color3.fromRGB(255, 100, 100))
-                if attempt < maxRetries then
-                    if timerConnection then timerConnection:Disconnect() end
-                    timerConnection = startTimer(retryDelay, attemptHop)
-                end
+                if timerConnection then timerConnection:Disconnect() end
+                timerConnection = startTimer(retryDelay, attemptHop)
                 attempt = attempt + 1
             else
-                -- Teleport initiated; wait for completion in new server
-                task.wait(5)
+                -- Wait to check if teleport was successful
+                task.wait(3)
+                if game.JobId == originalJobId then
+                    createNotification("Still in same server. Retrying in " .. retryDelay .. "s...", Color3.fromRGB(255, 100, 100))
+                    if timerConnection then timerConnection:Disconnect() end
+                    timerConnection = startTimer(retryDelay, attemptHop)
+                    attempt = attempt + 1
+                else
+                    createNotification("Successfully joined new server!", Color3.fromRGB(100, 255, 100))
+                    if timerConnection then timerConnection:Disconnect() end
+                    TimerLabel.Text = "Server Hop: Success"
+                end
             end
         else
             createNotification("No available servers. Retrying in " .. retryDelay .. "s...", Color3.fromRGB(255, 100, 100))
-            if attempt < maxRetries then
-                if timerConnection then timerConnection:Disconnect() end
-                timerConnection = startTimer(retryDelay, attemptHop)
-            end
-            attempt = attempt + 1
-        end
-
-        if attempt > maxRetries then
-            createNotification("Max retries reached. Could not hop.", Color3.fromRGB(255, 100, 100))
             if timerConnection then timerConnection:Disconnect() end
-            TimerLabel.Text = "Server Hop: Failed"
+            timerConnection = startTimer(retryDelay, attemptHop)
+            attempt = attempt + 1
         end
     end
 

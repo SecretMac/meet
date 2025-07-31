@@ -15,9 +15,30 @@ local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local workspace = game:GetService("Workspace")
-local player = Players.LocalPlayer
+
+-- Wait for LocalPlayer to exist
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local playerGui = player:WaitForChild("PlayerGui")
-local packets = require(ReplicatedStorage:WaitForChild("LocalModules").Backend.Packets)
+
+-- Load packets with retry mechanism
+local packets
+local function loadPackets()
+    local maxRetries = 5
+    local retryDelay = 1
+    for i = 1, maxRetries do
+        local success, result = pcall(function()
+            return require(ReplicatedStorage:WaitForChild("LocalModules", 10).Backend.Packets)
+        end)
+        if success then
+            return result
+        else
+            warn("Failed to load packets (Attempt " .. i .. "/" .. maxRetries .. "): " .. tostring(result))
+            task.wait(retryDelay)
+        end
+    end
+    error("Failed to load packets after " .. maxRetries .. " attempts")
+end
+packets = loadPackets()
 
 -- Invisible Characters
 local blob = "\u{000D}" -- newline
@@ -590,7 +611,7 @@ local function serverHop()
                 attempt = attempt + 1
             else
                 -- Teleport initiated; wait for completion in new server
-                task.wait(5) -- Allow time for teleport to process
+                task.wait(5)
             end
         else
             createNotification("No available servers. Retrying in " .. retryDelay .. "s...", Color3.fromRGB(255, 100, 100))

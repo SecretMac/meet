@@ -113,7 +113,7 @@ local TimerLabel = Instance.new("TextLabel")
 TimerLabel.Size = UDim2.new(1, -20, 0, 30)
 TimerLabel.Position = UDim2.new(0, 10, 0, 70)
 TimerLabel.BackgroundTransparency = 1
-TimerLabel.Text = "Server Hop: 40s"
+TimerLabel.Text = "Server Hop: 60s"
 TimerLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
 TimerLabel.Font = Enum.Font.Gotham
 TimerLabel.TextSize = 18
@@ -533,9 +533,9 @@ task.spawn(toolLoop)
 copyAvatar()
 
 -- Timer Logic
-local timeRemaining = 40
+local timeRemaining = 60
 local function startTimer(initialTime, onComplete)
-    timeRemaining = initialTime or 40
+    timeRemaining = initialTime or 60
     TimerLabel.Text = "Server Hop: " .. math.ceil(timeRemaining) .. "s"
     
     local connection
@@ -634,7 +634,7 @@ local function serverHop()
 end
 
 -- Start initial server hop with timer
-startTimer(40, serverHop)
+startTimer(60, serverHop)
 
 -- Ensure script is queued on teleport
 player.OnTeleport:Connect(function(state)

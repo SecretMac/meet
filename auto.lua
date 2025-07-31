@@ -40,6 +40,9 @@ local function loadPackets()
 end
 packets = loadPackets()
 
+-- Wait 5 seconds after loading LocalPlayer and packets
+task.wait(5)
+
 -- Invisible Characters
 local blob = "\u{000D}" -- newline
 local blob2 = "\u{001E}" -- invisible character
